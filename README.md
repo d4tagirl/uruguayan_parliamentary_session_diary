@@ -1,6 +1,11 @@
-# uruguayan_parliamentary_session_diary
+# Diarios de Sesiones de Diputados y Senadores uruguayas: scraping y text mining
 
 Éste es el código que usé para [este artículo de mi blog](https://d4tagirl.com/2018/04/scrapeando-las-sesiones-parlamentarias-de-uruguay) donde scrapeo los Diarios de Sesiones de Diputados y Senadores de Uruguay desde enero de 2017 hasta marzo de 2018, y de [este otro artículo donde analizo el texto de las sesiones](https://d4tagirl.com/2018/04/de-qu%C3%A9-se-habl%C3%B3-en-el-parlamento-uruguayo-desde-2017)
+
+## Archivos disponibles en csv (desde enero de 2017 hasta marzo de 2018):
+
+  * [Diputados](https://github.com/d4tagirl/uruguayan_parliamentary_session_diary/raw/master/data/diputados.csv)
+  * [Senadores](https://github.com/d4tagirl/uruguayan_parliamentary_session_diary/raw/master/data/senadores.csv)
 
 ## Paquetes destacados:
 
