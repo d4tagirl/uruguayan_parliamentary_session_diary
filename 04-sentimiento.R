@@ -8,6 +8,7 @@ library(ggplot2)
 library(viridis)
 library(lubridate)
 library(rcorpora)
+library(stringi)
 
 diputados <- readRDS("data/pdf_diputados")
 senadores <- readRDS("data/pdf_senadores")
@@ -20,8 +21,12 @@ senadores <- senadores %>%
   mutate(pdf = stri_replace_all(pdf, replacement = "", regex = "\\\n"))
 
 
-# ------------------ con http://web.eecs.umich.edu/~mihalcea/downloads/SpanishSentimentLexicons.tar.gz
+# --- Lexicon: http://web.eecs.umich.edu/~mihalcea/downloads/SpanishSentimentLexicons.tar.gz
 
+# comentarios acerca del Lexicon:
+# No hice un análisis profundo del lexicon, pero tiene evidentes limitaciones:
+#    * Tiene muy pocos términos (476 positivas de 871 en total)
+#    * La mayoría (si no todos) los adjetivos que considera son masculinos
 
 lexicon <- read_tsv("SpanishSentimentLexicons/fullStrengthLexicon.txt",
                     col_names = FALSE) %>% 
@@ -30,13 +35,16 @@ lexicon <- read_tsv("SpanishSentimentLexicons/fullStrengthLexicon.txt",
 
 stopwords <- corpora("words/stopwords/es")$stopWords
 
+# agrego a las stopwords números que se repiten mucho
 stopwords <- c(stopwords, as.character(seq(1:50)))
 
+# separo en palabras filtrando las stopwords
 tidy_diputados <- diputados %>%
   tidytext::unnest_tokens(word, pdf) %>% 
   filter(!word %in% stopwords) 
 
-pos_neg_words <- tidy_diputados %>%  
+# agrego sentimiento y visualizo
+tidy_diputados %>%  
   inner_join(lexicon, by = c("word" = "palabra")) %>%
   count(word, sentimiento, sort = TRUE) %>%
   ungroup() %>%
@@ -53,7 +61,7 @@ pos_neg_words <- tidy_diputados %>%
   coord_flip() +
   theme_minimal()
 
-
+# veo cantidad de palabras positivas y negativas que hay
 tidy_diputados %>%
   inner_join(lexicon, by = c("word" = "palabra")) %>%
   count(word, sentimiento, sort = TRUE) %>% 
@@ -69,8 +77,10 @@ tidy_diputados %>%
   coord_flip() +
   theme_minimal()
 
-stopwords_personalizadas <- c(stopwords_con_numeros, "discusion", "atento",
-                              "especial", "dicha", "facultades", "atencion")
+# como hay algunas palabras cuya clasificación no me convence, las excluyo
+
+stopwords_personalizadas <- c(stopwords, "negro", "discusion", "atento", "consideracion",
+                              "especial", "dicha", "facultades", "atencion", "asunto")
 
 tidy_diputados <- diputados %>%
   tidytext::unnest_tokens(word, pdf) %>% 
@@ -93,7 +103,6 @@ tidy_diputados %>%
   coord_flip() +
   theme_minimal()
 
-
 tidy_diputados %>%
   inner_join(lexicon, by = c("word" = "palabra")) %>%
   count(word, sentimiento, sort = TRUE) %>% 
@@ -103,13 +112,13 @@ tidy_diputados %>%
   mutate(sentimiento = reorder(sentimiento, n)) %>%
   ggplot(aes(sentimiento, n)) +
   geom_col(aes(fill = sentimiento), show.legend = FALSE) +
-  scale_fill_manual(values = c("green3", "red2")) +
+  scale_fill_manual(values = c("red2", "green3")) +
   ylab(NULL) +
   xlab(NULL) +
   coord_flip() +
   theme_minimal()
 
-# --------- sentiment across months ----------
+# --------- sentimiento a lo largo de los meses ----------
 
 tidy_diputados  %>%
   inner_join(lexicon, by = c("word" = "palabra")) %>%
@@ -120,32 +129,17 @@ tidy_diputados  %>%
   mutate(sentimiento = pos - neg) %>% 
   arrange(mes) %>% 
   ggplot(aes(as.factor(mes), sentimiento)) +
-  # ggplot(aes(as.factor(date), sentimiento)) +
   geom_col(aes(fill = sentimiento > 0), show.legend = FALSE) +
-  # facet_grid(.~session) +
-  coord_flip() +
-  theme_minimal()  +
+  theme_minimal() +
+  theme(axis.title.x=element_blank(), axis.text.x  = element_text(angle=45,
+                                                                  hjust = 1,
+                                                                  vjust = 1)) +
   scale_fill_viridis(discrete = TRUE)
 
+# Nota: en Setiembre Renunció el Vice Presidente 
 
 
-
-
-
-
-
-
-
-# marzo - positivo
-# - ORDEN DEL DÍA -
-#   1º.- Elección de Presidente para el Tercer Período Ordinario de la
-# XLVIII Legislatura.
-# 2º.- Elección de cuatro Vicepresidentes.
-# 3º.- Determinación de días y horas de las sesiones ordinarias.
-# 4º.- Fijación de los días destinados al trabajo de las Comisiones. 
-
-
-# ------------- more extreme sessions -----------------
+# ------------- Sesiones más extremas -----------------
 
 sesiones_positivas_diputados <- tidy_diputados  %>%
   inner_join(lexicon, by = c("word" = "palabra")) %>%
@@ -157,15 +151,14 @@ sesiones_positivas_diputados <- tidy_diputados  %>%
   arrange(sentimiento) %>% 
   top_n(2, sentimiento)
 
-# fecha_sesion    neg   pos sentimiento
-# <chr>         <dbl> <dbl>       <dbl>
-# 1 2017-12-20_1   421.  800.        379. inauguracion de escuela
-# 2 2017-08-08_32  278.  660.        382. convenios varios y escuelas y liceos. también salud mental.
-# 3 2017-12-12_58  470.  875.        405.
+  #   fecha_sesion   neg   pos sentimiento
+  #   <chr>        <dbl> <dbl>       <dbl>
+  # 1 2017-12-20_1  336.  506.        170.  inauguracion de escuela
+  # 2 2018-03-06_2  158.  379.        221.  día de la mujer, etc.
 
-# 1.
-# EMILIO VERDESIO. (Designación a la Escuela Especial Nº 133 de Rosario, departamento de Colonia). 
-  
+# diputados$pdf[diputados$fecha_sesion == "2017-12-20_1"]
+# diputados$pdf[diputados$fecha_sesion == "2018-03-06_2"]
+
 sesiones_negativas_diputados <- tidy_diputados  %>%
   inner_join(lexicon, by = c("word" = "palabra")) %>%
   group_by(fecha_sesion) %>% 
@@ -176,28 +169,13 @@ sesiones_negativas_diputados <- tidy_diputados  %>%
   arrange(sentimiento) %>% 
   top_n(-2, sentimiento)
 
-# fecha_sesion    neg   pos sentimiento
-# <chr>         <dbl> <dbl>       <dbl>
-# 1 2017-05-10_14  839.  578.       -261.   # venezuela
-# 2 2017-02-15_3   815.  703.       -112.   # violencia en el deporte
-# 3 2017-06-13_21  187.  101.        -86.
-
-# 1.
-# mayo: extraordinaria - negativa
-# EVALUACIÓN DEL PODER EJECUTIVO SOBRE LA SITUACIÓN EN LA REPÚBLICA
-# BOLIVARIANA DE VENEZUELA A LA LUZ DE LA CARTA DEMOCRÁTICA
-# INTERAMERICANA DE LA OEA Y LAS CLÁUSULAS DEMOCRÁTICAS DE LA UNASUR Y
-# EL MERCOSUR. (Llamado a Sala al señor Ministro de Relaciones Exteriores).
-# (Carp. 1942/017). 
-
-# 2.
-# febrero- negativa
-# SITUACIÓN DE EXTREMA GRAVEDAD EN MATERIA DE SEGURIDAD PÚBLICA, ESPECIALMENTE
-# LOS HECHOS RELACIONADOS CON EL DEPORTE EN LOS ÚLTIMOS TREINTA DÍAS. (Llamado a
-# Sala al señor Ministro del Interior). 
+  #   fecha_sesion    neg   pos sentimiento
+  #   <chr>         <dbl> <dbl>       <dbl>
+  # 1 2017-05-10_14  792.  360.       -432.  # interpelación Nin Novoa - Venezuela
+  # 2 2017-02-15_3   788.  484.       -304.  # interpelación Bonomi - violencia en el deporte
 
 
-# ------------- tf-idf de sesiones extremas ----------
+# ------------- tf-idf de sesiones extremas de diputados ----------
 
 sesiones_extremas <- c(sesiones_negativas_diputados$fecha_sesion, sesiones_positivas_diputados$fecha_sesion)
 

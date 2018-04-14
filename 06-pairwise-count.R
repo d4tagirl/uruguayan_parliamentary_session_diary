@@ -1,3 +1,10 @@
+# Acá mi intención era ver qué palabras rodeaban ciertas palabras clave, como Sendic o ANCAP. Para eso necesitaba
+# definir unidades intermedias entre un documento entero (la sesión) y la palabra, entonces probé separar por renglones
+# después por grupos de renglones. La idea es ver si hay palabras que se usen en el mismo renglón o grupo de renglones
+# más frecuentemente que otras. Para eso usé el pairwise_count.
+
+# no fue usado en el artículo
+
 library(readr)
 library(ggplot2)
 library(purrr)
@@ -13,10 +20,7 @@ library(stringr)
 diputados <- readRDS("data/pdf_diputados")
 senadores <- readRDS("data/pdf_senadores")
 
-# ----- separo renglones -------
-
-# palabra_clave <- "renuncia"
-# palabras_clave <- c("renuncia", "ancap", "sendic")
+# ----- separo por grupos de renglones -------
 
 # Diputados
 
@@ -27,11 +31,12 @@ stopwords <- c(stopwords, as.character(seq(1:50)))
 renglones_diputados <- diputados %>%
   tidytext::unnest_tokens(renglon, pdf, token = stringr::str_split, pattern = "\\\n") %>% 
   mutate(renglon = str_replace_all(renglon, "[\\s]+", " "),
-         section = row_number() %/% 100) %>%      #secciones de 15 renglones
-  # filter(str_detect(renglon, palabra_clave)) %>% 
+         section = row_number() %/% 100) %>%      # secciones de 100 renglones
   group_by(section) %>% 
   summarise(text = paste0(renglon, collapse = " ")) %>% 
-  filter(str_detect(text, "ancap.*sendic|sendic.*ancap")) %>% 
+  # quiero quedarme con los grupos de renglones que cumplen con la expresión regular:
+  # siempre que se diga ancap en algún momento y en algún momento posterior dice sendic, o viceversa.
+  filter(str_detect(text, "ancap.*sendic|sendic.*ancap")) %>%  
   tidytext::unnest_tokens(word, text) %>% 
   filter(!word %in% stopwords) 
 
@@ -39,11 +44,7 @@ library(widyr)
 diputados_pair_count <- renglones_diputados %>%
   widyr::pairwise_count(word, section, sort = TRUE) 
 
-# renglones_diputados %>% 
-#   group_by(word) %>%
-#   filter(n() >= 15) %>%
-#   pairwise_cor(word, section, sort = TRUE) %>%
-#   filter(item1 %in% palabras_clave)
+# visualizo con un grafo
 
 library(igraph)
 library(ggraph)
@@ -60,15 +61,14 @@ diputados_pair_count %>%
                  point.padding = unit(0.2, "lines")) +
   theme_void()
 
-
+# no lo uso en el artículo
 
 # Senadores
 
 renglones_senadores <- senadores %>%
   tidytext::unnest_tokens(renglon, pdf, token = stringr::str_split, pattern = "\\\n") %>% 
   mutate(renglon = str_replace_all(renglon, "[\\s]+", " "),
-         section = row_number() %/% 100) %>%      #secciones de 15 renglones
-  # filter(str_detect(renglon, palabra_clave)) %>% 
+         section = row_number() %/% 100) %>%      #secciones de 100 renglones
   group_by(section) %>% 
   summarise(text = paste0(renglon, collapse = " ")) %>% 
   filter(str_detect(text, "ancap.*sendic|sendic.*ancap")) %>% 
@@ -78,12 +78,6 @@ renglones_senadores <- senadores %>%
 library(widyr)
 senadores_pair_count <- renglones_senadores %>%
   widyr::pairwise_count(word, section, sort = TRUE) 
-
-# renglones_senadores %>% 
-#   group_by(word) %>%
-#   filter(n() >= 15) %>%
-#   pairwise_cor(word, section, sort = TRUE) %>%
-#   filter(item1 == palabra_clave)
 
 library(igraph)
 library(ggraph)

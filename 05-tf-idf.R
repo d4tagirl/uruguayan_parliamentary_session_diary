@@ -1,5 +1,3 @@
-
-
 library(purrr)
 library(dplyr)
 library(tidyr)
@@ -11,10 +9,10 @@ library(rcorpora)
 library(scales)
 library(zoo)
 library(gridExtra)
+library(stringi)
 
 diputados <- readRDS("data/pdf_diputados")
 senadores <- readRDS("data/pdf_senadores")
-
 
 # me deshago de los saltos de línea que sólo los voy a usar más adelante
 diputados <- diputados %>%
@@ -23,9 +21,9 @@ diputados <- diputados %>%
 senadores <- senadores %>%
   mutate(pdf = stri_replace_all(pdf, replacement = "", regex = "\\\n"))
 
-
-
 # --------------- tf-idf por sesion -----------------
+
+# Diputados
 
 session_diputados_words <- diputados %>%
   unnest_tokens(word, pdf) %>%
@@ -38,12 +36,10 @@ diputados_words <- session_diputados_words %>%
 
 session_diputados_words <- left_join(session_diputados_words, diputados_words)
 
-session_diputados_words
-
-ggplot(session_diputados_words, aes(n/total, fill = fecha_sesion)) +
-  geom_histogram(show.legend = FALSE) +
-  xlim(NA, 0.0009) +
-  facet_wrap(~fecha_sesion, scales = "free_y")
+# ggplot(session_diputados_words, aes(n/total, fill = fecha_sesion)) +
+#   geom_histogram(show.legend = FALSE) +
+#   xlim(NA, 0.0009) +
+#   facet_wrap(~fecha_sesion, scales = "free_y")
 
 session_diputados_words <- session_diputados_words %>%
   bind_tf_idf(word, fecha_sesion, n)
@@ -52,7 +48,8 @@ session_diputados_words %>%
   select(-total) %>%
   arrange(desc(tf_idf))
 
-# cada 3 meses
+# Como son muchas sesiones para mirarlas juntas, las miro por períodos 
+
 session_diputados_words %>%
   filter(fecha < as.Date("2017-05-01")) %>% 
   arrange(desc(tf_idf)) %>%
@@ -80,6 +77,10 @@ session_diputados_words %>%
   facet_wrap(~fecha_sesion, ncol = 3,  scales = "free") +
   coord_flip()
 
+# así se podría hacer hasta cubrir todo el período
+
+
+# Senadores
 
 session_senadores_words <- senadores %>%
   unnest_tokens(word, pdf) %>%
@@ -92,12 +93,10 @@ senadores_words <- session_senadores_words %>%
 
 session_senadores_words <- left_join(session_senadores_words, senadores_words)
 
-session_senadores_words
-
-ggplot(session_senadores_words, aes(n/total, fill = fecha_sesion)) +
-  geom_histogram(show.legend = FALSE) +
-  xlim(NA, 0.0009) +
-  facet_wrap(~fecha_sesion, scales = "free_y")
+# ggplot(session_senadores_words, aes(n/total, fill = fecha_sesion)) +
+#   geom_histogram(show.legend = FALSE) +
+#   xlim(NA, 0.0009) +
+#   facet_wrap(~fecha_sesion, scales = "free_y")
 
 session_senadores_words <- session_senadores_words %>%
   bind_tf_idf(word, fecha_sesion, n)
@@ -106,7 +105,7 @@ session_senadores_words %>%
   select(-total) %>%
   arrange(desc(tf_idf))
 
-# cada 3 meses
+# por períodos, como hice con diputados
 session_senadores_words %>%
   filter(fecha < as.Date("2017-05-01")) %>% 
   arrange(desc(tf_idf)) %>%
@@ -141,6 +140,8 @@ session_senadores_words %>%
 
 # --------------- tf-idf por mes -----------------
 
+# Diputados
+
 diputados_mes <- diputados %>% 
   mutate(mes = as.factor(as.yearmon(fecha)))
 
@@ -154,7 +155,6 @@ diputados_words_mes <- session_diputados_words_mes %>%
   summarize(total = sum(n))
 
 session_diputados_words_mes <- left_join(session_diputados_words_mes, diputados_words_mes)
-session_diputados_words_mes
 
 ggplot(session_diputados_words_mes, aes(n/total, fill = mes)) +
   geom_histogram(show.legend = FALSE) +
@@ -181,8 +181,9 @@ tfidf_mes_diputados <- session_diputados_words_mes %>%
   coord_flip() +
   ggtitle("tf-idf Sesiones de Diputados")
 
-
 tfidf_mes_diputados
+
+# Diputados
 
 senadores_mes <- senadores %>% 
   mutate(mes = as.factor(as.yearmon(fecha)))
@@ -197,7 +198,6 @@ senadores_words_mes <- session_senadores_words_mes %>%
   summarize(total = sum(n))
 
 session_senadores_words_mes <- left_join(session_senadores_words_mes, senadores_words_mes)
-session_senadores_words_mes
 
 ggplot(session_senadores_words_mes, aes(n/total, fill = mes)) +
   geom_histogram(show.legend = FALSE) +
@@ -223,7 +223,6 @@ tfidf_mes_senadores <- session_senadores_words_mes %>%
   facet_wrap(~mes, ncol = 1,  scales = "free") +
   coord_flip() +
   ggtitle("tf-idf Sesiones de senadores")
-
 
 tfidf_mes_senadores
 
