@@ -7,6 +7,8 @@
   * [Diputados](https://github.com/d4tagirl/uruguayan_parliamentary_session_diary/raw/master/data/diputados.csv)
   * [Senadores](https://github.com/d4tagirl/uruguayan_parliamentary_session_diary/raw/master/data/senadores.csv)
 
+La información a partir de la cual se construyeron los archivos proviene del [sitio web del parlamento](https://parlamento.gub.uy).
+
 ## Paquetes destacados:
 
   * `robotstxt` de [rOpenSci](https://ropensci.org/), para ver si la sección del sitio web que quiero navegar permite ser accedida por un robot 🤖;
