@@ -1,14 +1,16 @@
 extract_pdf <- function(url, pag = 1){
   
-  if (pag == 2){
+  #armo la url de la página 2
+  if (pag != 1){
     url <- url %>%
       read_html() %>%
       html_nodes(".pager-item a") %>%
       html_attr("href") %>%
       map(~ paste0("https://parlamento.gub.uy", .)) %>%
-      unlist() 
-    }
-
+      unlist() %>% 
+      .[pag-1]
+  }
+  GESTIÓN DE ASSE DESDE EL AÑO 2008 HASTA LA FECHA Y LA DENOMINADA ESTAFA AL FONASA. 
   pdfs <- url %>%
     read_html() %>%
     html_nodes(".views-field-DS-File-IMG a") %>%   # seleccionar clase
@@ -25,13 +27,14 @@ extract_pdf <- function(url, pag = 1){
 extract_metadata <- function(url, info, pag = 1){
   if (info == "fecha") nodes = "td.views-field-DS-Fecha"
   if (info == "sesion") nodes = "td.views-field-Ssn-Nro"
-  if (pag == 2){
+  if (pag != 1){
     url <- url %>%
       read_html() %>%
       html_nodes(".pager-item a") %>%
       html_attr("href") %>%
       map(~ paste0("https://parlamento.gub.uy", .)) %>%
-      unlist() 
+      unlist() %>% 
+      .[pag-1]
     }
   
   url %>% 

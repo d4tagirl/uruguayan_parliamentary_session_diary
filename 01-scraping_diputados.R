@@ -1,3 +1,6 @@
+# packrat::restore()
+packrat::init()
+
 library(rvest)
 library(purrr)
 library(pdftools)
@@ -17,7 +20,7 @@ robotstxt::paths_allowed("https://parlamento.gub.uy/documentosyleyes/documentos/
 #······················
 
 date_init <- "01-01-2017"
-date_end  <- "31-03-2018"
+date_end  <- "31-07-2019"
 
 #······················
 #      diputados
@@ -33,17 +36,30 @@ url_diputados <- paste0("https://parlamento.gub.uy/documentosyleyes/documentos/d
 
 pdf_diputados_pag1 <- extract_pdf(url_diputados, pag = 1)
 pdf_diputados_pag2 <- extract_pdf(url_diputados, pag = 2)
+pdf_diputados_pag3 <- extract_pdf(url_diputados, pag = 3)
+pdf_diputados_pag4 <- extract_pdf(url_diputados, pag = 4)
+pdf_diputados_pag5 <- extract_pdf(url_diputados, pag = 5)
+
 
 # junto todos los pdfs
-pdf_diputados <- bind_rows(pdf_diputados_pag1, pdf_diputados_pag2)
+pdf_diputados <- bind_rows(pdf_diputados_pag1, pdf_diputados_pag2,
+                           pdf_diputados_pag3, pdf_diputados_pag4,
+                           pdf_diputados_pag5)
 
 # extraigo fechas
 
 pdf_fechas_diputados_pag1 <- extract_metadata(url_diputados, info = "fecha", pag = 1)
 pdf_fechas_diputados_pag2 <- extract_metadata(url_diputados, info = "fecha", pag = 2)
+pdf_fechas_diputados_pag3 <- extract_metadata(url_diputados, info = "fecha", pag = 3)
+pdf_fechas_diputados_pag4 <- extract_metadata(url_diputados, info = "fecha", pag = 4)
+pdf_fechas_diputados_pag5 <- extract_metadata(url_diputados, info = "fecha", pag = 5)
 
 # junto todos las fechas y las convierto en un df
-pdf_fechas_diputados <- c(pdf_fechas_diputados_pag1, pdf_fechas_diputados_pag2) %>% 
+pdf_fechas_diputados <- c(pdf_fechas_diputados_pag1, 
+                          pdf_fechas_diputados_pag2,
+                          pdf_fechas_diputados_pag3, 
+                          pdf_fechas_diputados_pag4,
+                          pdf_fechas_diputados_pag5) %>% 
   tbl_df() %>% 
   transmute(fecha = as.Date(value, "%d-%m-%Y"))
 
@@ -51,9 +67,16 @@ pdf_fechas_diputados <- c(pdf_fechas_diputados_pag1, pdf_fechas_diputados_pag2) 
 
 pdf_sesion_diputados_pag1 <- extract_metadata(url_diputados, info = "sesion", pag = 1)
 pdf_sesion_diputados_pag2 <- extract_metadata(url_diputados, info = "sesion", pag = 2)
+pdf_sesion_diputados_pag3 <- extract_metadata(url_diputados, info = "sesion", pag = 3)
+pdf_sesion_diputados_pag4 <- extract_metadata(url_diputados, info = "sesion", pag = 4)
+pdf_sesion_diputados_pag5 <- extract_metadata(url_diputados, info = "sesion", pag = 5)
 
 # junto todos las sesiones y las convierto en un df
-pdf_sesion_diputados <- c(pdf_sesion_diputados_pag1, pdf_sesion_diputados_pag2) %>% 
+pdf_sesion_diputados <- c(pdf_sesion_diputados_pag1, 
+                          pdf_sesion_diputados_pag2,
+                          pdf_sesion_diputados_pag3, 
+                          pdf_sesion_diputados_pag4,
+                          pdf_sesion_diputados_pag5) %>% 
   tbl_df() %>% 
   rename(sesion = value)
 

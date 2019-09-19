@@ -25,7 +25,7 @@ senadores <- senadores %>%
 
 freq_diputados <- ggplot(diputados, aes(as.factor(as.yearmon(fecha)), fill=as.factor(as.yearmon(fecha)))) + 
   geom_bar(position='dodge', show.legend = FALSE) + 
-  ylab("Cantidad") + 
+  ylab("Cantidad de sesiones") + 
   xlab("") + 
   scale_x_discrete(limits = as.factor(as.yearmon(seq.Date(floor_date(min(senadores$fecha), "month"), floor_date(max(senadores$fecha), "month"), "month")))) +
   theme_minimal() +
@@ -35,7 +35,7 @@ freq_diputados <- ggplot(diputados, aes(as.factor(as.yearmon(fecha)), fill=as.fa
 freq_senadores <- ggplot(senadores, aes(as.factor(as.yearmon(fecha)), fill=as.factor(as.yearmon(fecha)))) + 
   geom_bar(position='dodge', show.legend = FALSE) +
   xlab("") + 
-  ylab("Cantidad") +
+  ylab("Cantidad de sesiones") +
   scale_x_discrete(limits = as.factor(as.yearmon(seq.Date(floor_date(min(senadores$fecha), "month"), floor_date(max(senadores$fecha), "month"), "month")))) +
   theme_minimal() +
   theme(axis.text.x  = element_text(angle=45,
@@ -87,26 +87,69 @@ session_senadores_words_mes <- left_join(session_senadores_words_mes, cant_sesio
 prom_palabras_sesiones_diputados <- ggplot(session_diputados_words_mes, aes(x = as.factor(mes), fill=as.factor(mes))) + 
   geom_col(aes(y = palabras_prom_sesion), show.legend = FALSE) + 
   scale_y_continuous(limit=c(0,150000)) +
-  ylab("Cantidad de palabras promedio en la sesión") + 
+  ylab("Cantidad de palabras promedio \n de las sesiones del mes") + 
   xlab("") + 
   scale_x_discrete(limits = as.factor(as.yearmon(seq.Date(floor_date(min(senadores$fecha), "month"), floor_date(max(senadores$fecha), "month"), "month")))) +
   theme_minimal() +
   theme(axis.text.x=element_blank()) +
-  ggtitle("Cantidad de palabras promedio en sesiones de diputados")
+  ggtitle("Diputados")
 
 prom_palabras_sesiones_senadores <- ggplot(session_senadores_words_mes, aes(x = as.factor(mes), fill=as.factor(mes))) + 
   geom_col(aes(y = palabras_prom_sesion), show.legend = FALSE) + 
   scale_y_continuous(limit=c(0,150000)) + 
   scale_x_discrete(limits = as.factor(as.yearmon(seq.Date(floor_date(min(senadores$fecha), "month"), floor_date(max(senadores$fecha), "month"), "month")))) +
   xlab("") + 
-  ylab("Cantidad de palabras promedio de las sesiones del mes") +
+  ylab("Cantidad de palabras promedio \n de las sesiones del mes") +
   theme_minimal() +
   theme(axis.text.x  = element_text(angle=45,
                                     hjust = 1,
                                     vjust = 1)) +
-  ggtitle("Cantidad de palabras promedio en sesiones de Senadores")
+  ggtitle("Senadores")
 
 grid.arrange(prom_palabras_sesiones_diputados, prom_palabras_sesiones_senadores)
+
+# busco las sesiones más extremas: 
+# Diputados:
+#   Feb 2017: violencia en el fútbol
+# 
+# diputados %>%
+#   mutate(mes = as.yearmon(fecha)) %>% 
+#   filter(mes == "Feb 2017") %>% 
+#   unnest_tokens(word, pdf) %>% 
+#   count(sesion, sort = TRUE) %>%
+#   ungroup()
+# 
+# #   Ago 2018: 
+# 
+# diputados %>%
+#   mutate(mes = as.yearmon(fecha)) %>% 
+#   filter(mes == "Aug 2018") %>% 
+#   unnest_tokens(word, pdf) %>% 
+#   count(sesion, sort = TRUE) %>%
+#   ungroup()
+# 
+# 3 días de debate en sesiones especiales de RENDICIÓN DE CUENTAS Y BALANCE DE EJECUCIÓN PRESUPUESTAL
+# Dic 2017
+# diputados %>%
+#   mutate(mes = as.yearmon(fecha)) %>%
+#   filter(mes == "Dec 2017") %>%
+#   unnest_tokens(word, pdf) %>%
+#   count(sesion, sort = TRUE) %>%
+#   ungroup()
+
+# senadores:
+# Setiembre 2017 y 2018:
+#   Rend de cuentas
+# senadores %>%
+#   mutate(mes = as.yearmon(fecha)) %>%
+#   filter(mes == "Apr 2018") %>%
+#   unnest_tokens(word, pdf) %>%
+#   count(sesion, sort = TRUE) %>%
+#   ungroup()
+# Nov 2017: Senado debatió acuerdo entre UPM y gobierno
+
+#Abril 2018: La octava interpelación a Bonomi será el 18 de abril
+
 
 # --------- most common words ------
 
@@ -154,3 +197,4 @@ most_used_sen %>%
   coord_flip() +
   theme_minimal() +
   scale_fill_viridis(discrete = TRUE)
+

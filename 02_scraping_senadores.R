@@ -17,7 +17,7 @@ robotstxt::paths_allowed("https://parlamento.gub.uy/documentosyleyes/documentos/
 #······················
 
 date_init <- "01-01-2017"
-date_end  <- "31-03-2018"
+date_end  <- "31-07-2019"
 
 #······················
 #      senadores
@@ -33,9 +33,12 @@ url_senadores <- paste0("https://parlamento.gub.uy/documentosyleyes/documentos/d
 
 pdf_senadores_pag1 <- extract_pdf(url_senadores, pag = 1)
 pdf_senadores_pag2 <- extract_pdf(url_senadores, pag = 2)
+pdf_senadores_pag3 <- extract_pdf(url_senadores, pag = 3)
+pdf_senadores_pag4 <- extract_pdf(url_senadores, pag = 4)
 
 # junto todos los pdfs
-pdf_senadores <- bind_rows(pdf_senadores_pag1, pdf_senadores_pag2) %>% 
+pdf_senadores <- bind_rows(pdf_senadores_pag1, pdf_senadores_pag2,
+                           pdf_senadores_pag3, pdf_senadores_pag4) %>% 
   distinct() # no hay duplicados como con los diputados, pero por las dudas
 
 
@@ -43,9 +46,12 @@ pdf_senadores <- bind_rows(pdf_senadores_pag1, pdf_senadores_pag2) %>%
 
 pdf_fechas_senadores_pag1 <- extract_metadata(url_senadores, info = "fecha", pag = 1)
 pdf_fechas_senadores_pag2 <- extract_metadata(url_senadores, info = "fecha", pag = 2)
+pdf_fechas_senadores_pag3 <- extract_metadata(url_senadores, info = "fecha", pag = 3)
+pdf_fechas_senadores_pag4 <- extract_metadata(url_senadores, info = "fecha", pag = 4)
 
 # junto todos las fechas y las convierto en un df
-pdf_fechas_senadores <- c(pdf_fechas_senadores_pag1, pdf_fechas_senadores_pag2) %>% 
+pdf_fechas_senadores <- c(pdf_fechas_senadores_pag1, pdf_fechas_senadores_pag2,
+                          pdf_fechas_senadores_pag3, pdf_fechas_senadores_pag4) %>% 
   tbl_df() %>% 
   transmute(fecha = as.Date(value, "%d-%m-%Y"))
 
@@ -53,9 +59,12 @@ pdf_fechas_senadores <- c(pdf_fechas_senadores_pag1, pdf_fechas_senadores_pag2) 
 
 pdf_sesion_senadores_pag1 <- extract_metadata(url_senadores, info = "sesion", pag = 1)
 pdf_sesion_senadores_pag2 <- extract_metadata(url_senadores, info = "sesion", pag = 2)
+pdf_sesion_senadores_pag3 <- extract_metadata(url_senadores, info = "sesion", pag = 3)
+pdf_sesion_senadores_pag4 <- extract_metadata(url_senadores, info = "sesion", pag = 4)
 
 # junto todos las sesiones y las convierto en un df
-pdf_sesion_senadores <- c(pdf_sesion_senadores_pag1, pdf_sesion_senadores_pag2) %>% 
+pdf_sesion_senadores <- c(pdf_sesion_senadores_pag1, pdf_sesion_senadores_pag2,
+                          pdf_sesion_senadores_pag3, pdf_sesion_senadores_pag4) %>% 
   tbl_df() %>% 
   rename(sesion = value)
 
